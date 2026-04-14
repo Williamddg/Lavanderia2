@@ -3,43 +3,55 @@
 import type {
   ApiResponse,
   ClientInput,
+  CompanySettings,
+  CompanySettingsInput,
   DbConnectionConfig,
   DeliveryInput,
   ExternalLinkPayload,
+  HealthStatus,
+  Invoice,
+  InvoiceDetail,
+  LicenseStatus,
   LoginInput,
+  Order,
+  OrderDetail,
+  OrderProtectionPasswordInput,
   OrderInput,
+  Payment,
   PaymentInput,
+  PrinterInfo,
+  ReportsSummary,
   Service,
-  ServiceInput
+  ServiceInput,
+  SessionUser
 } from '@shared/types';
 
 declare global {
   interface Window {
     desktopApi: {
       verifyPassword: (password: string) => Promise<ApiResponse<{ valid: boolean }>>;
-      getOrderProtectionPassword: () => Promise<unknown>;
-      updateOrderProtectionPassword: (input: {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}) => Promise<unknown>;
+      updateOrderProtectionPassword: (
+        input: OrderProtectionPasswordInput
+      ) => Promise<ApiResponse<{ success: true }>>;
 
-      updateOrder: (orderId: number, input: OrderInput) => Promise<unknown>;
-      cancelOrder: (orderId: number) => Promise<unknown>;
+      updateOrder: (orderId: number, input: OrderInput) => Promise<ApiResponse<OrderDetail>>;
+      cancelOrder: (orderId: number) => Promise<ApiResponse<{ success: boolean }>>;
 
-      getLicenseStatus: () => Promise<unknown>;
-      activateLicense: (licenseKey: string) => Promise<unknown>;
+      getLicenseStatus: () => Promise<ApiResponse<LicenseStatus>>;
+      activateLicense: (licenseKey: string) => Promise<ApiResponse<LicenseStatus>>;
 
       connectDriveBackup: () => Promise<unknown>;
       uploadBackupToDrive: () => Promise<unknown>;
       listBackups: () => Promise<unknown>;
 
-      listPrinters: () => Promise<unknown>;
+      listPrinters: () => Promise<ApiResponse<PrinterInfo[]>>;
       openCashDrawer: (printerName?: string) => Promise<unknown>;
 
-      updateCompanySettings: (input: any) => Promise<any>;
+      updateCompanySettings: (
+        input: CompanySettingsInput
+      ) => Promise<ApiResponse<CompanySettings | null>>;
 
-      getReportsSummary: (from?: string, to?: string) => Promise<unknown>;
+      getReportsSummary: (from?: string, to?: string) => Promise<ApiResponse<ReportsSummary>>;
 
       listWarranties: () => Promise<unknown>;
       listWarrantyStatuses: () => Promise<unknown>;
@@ -63,28 +75,28 @@ declare global {
       updateService: (id: number, input: ServiceInput) => Promise<Service>;
       deleteService: (id: number) => Promise<{ success: boolean }>;
 
-      health: () => Promise<unknown>;
-      openExternal: (payload: ExternalLinkPayload) => Promise<unknown>;
-      saveDbConfig: (config: DbConnectionConfig) => Promise<unknown>;
-      login: (input: LoginInput) => Promise<unknown>;
-      getCompanySettings: () => Promise<unknown>;
+      health: () => Promise<ApiResponse<HealthStatus>>;
+      openExternal: (payload: ExternalLinkPayload) => Promise<ApiResponse<{ opened: true }>>;
+      saveDbConfig: (config: DbConnectionConfig) => Promise<ApiResponse<HealthStatus>>;
+      login: (input: LoginInput) => Promise<ApiResponse<SessionUser>>;
+      getCompanySettings: () => Promise<ApiResponse<CompanySettings | null>>;
 
       listClients: () => Promise<unknown>;
       createClient: (input: ClientInput) => Promise<unknown>;
       updateClient: (id: number, input: ClientInput) => Promise<unknown>;
       deleteClient: (id: number) => Promise<unknown>;
 
-      listOrders: () => Promise<unknown>;
-      getOrderDetail: (id: number) => Promise<unknown>;
+      listOrders: () => Promise<ApiResponse<Order[]>>;
+      getOrderDetail: (id: number) => Promise<ApiResponse<OrderDetail>>;
       getOrderCatalogs: () => Promise<unknown>;
       createOrder: (input: OrderInput) => Promise<unknown>;
       updateOrderStatus: (orderId: number, statusId: number) => Promise<unknown>;
 
-      listPayments: (orderId?: number) => Promise<unknown>;
-      createPayment: (input: PaymentInput) => Promise<unknown>;
+      listPayments: (orderId?: number) => Promise<ApiResponse<Payment[]>>;
+      createPayment: (input: PaymentInput) => Promise<ApiResponse<Payment>>;
 
-      listInvoices: () => Promise<unknown>;
-      getInvoiceDetail: (id: number) => Promise<unknown>;
+      listInvoices: () => Promise<ApiResponse<Invoice[]>>;
+      getInvoiceDetail: (id: number) => Promise<ApiResponse<InvoiceDetail>>;
       createInvoiceFromOrder: (orderId: number) => Promise<unknown>;
 
       openCashSession: (input: {

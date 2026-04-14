@@ -4,6 +4,8 @@ import { registerIpc } from './ipc/register'
 import { autoUpdater } from 'electron-updater'
 
 const isDev = !app.isPackaged
+const rendererPath = path.join(app.getAppPath(), 'dist', 'index.html')
+const shouldOpenDevTools = process.env.ELECTRON_OPEN_DEVTOOLS === '1'
 
 const createWindow = async () => {
   const mainWindow = new BrowserWindow({
@@ -15,17 +17,19 @@ const createWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: true
     }
   })
 
   try {
     if (isDev) {
       await mainWindow.loadURL('http://localhost:5173')
-      mainWindow.webContents.openDevTools()
+      if (shouldOpenDevTools) {
+        mainWindow.webContents.openDevTools()
+      }
     } else {
-      const indexPath = path.join(app.getAppPath(), 'dist', 'index.html')
-      await mainWindow.loadFile(indexPath)
+      await mainWindow.loadFile(rendererPath)
 
       // 👉 SOLO abre devtools si quieres debug en producción
       // mainWindow.webContents.openDevTools()

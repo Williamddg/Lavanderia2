@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 electron_1.contextBridge.exposeInMainWorld('desktopApi', {
     verifyPassword: (password) => electron_1.ipcRenderer.invoke('auth:verify-password', password),
-    getOrderProtectionPassword: () => electron_1.ipcRenderer.invoke('settings:get-order-protection-password'),
     updateOrderProtectionPassword: (input) => electron_1.ipcRenderer.invoke('settings:update-order-protection-password', input),
     getLicenseStatus: () => electron_1.ipcRenderer.invoke('license:status'),
     activateLicense: (licenseKey) => electron_1.ipcRenderer.invoke('license:activate', licenseKey),

@@ -47,7 +47,25 @@ const orderSchema = z.object({
   items: z.array(orderItemSchema).min(1)
 });
 
-const mapOrder = (row: any): Order => ({
+type OrderRow = {
+  id: number;
+  order_number: string;
+  client_id: number;
+  client_name: string;
+  status_id: number;
+  status_name: string;
+  status_color: string;
+  notes: string | null;
+  subtotal: string | number;
+  discount_total: string | number;
+  total: string | number;
+  paid_total: string | number;
+  balance_due: string | number;
+  due_date: Date | null;
+  created_at: Date;
+};
+
+const mapOrder = (row: OrderRow): Order => ({
   id: row.id,
   orderNumber: row.order_number,
   clientId: row.client_id,

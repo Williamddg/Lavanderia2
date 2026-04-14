@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.licenseService = void 0;
 const node_os_1 = __importDefault(require("node:os"));
 const node_crypto_1 = __importDefault(require("node:crypto"));
+const electron_store_1 = __importDefault(require("electron-store"));
 const supabase_js_1 = require("@supabase/supabase-js");
-const ElectronStore = require('electron-store').default;
-const store = new ElectronStore({
+const store = new electron_store_1.default({
     name: 'license-store'
 });
 const SUPABASE_URL = 'https://wswuifmfauepefrtaonf.supabase.co';

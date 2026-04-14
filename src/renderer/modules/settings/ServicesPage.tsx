@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Service, ServiceInput } from '@shared/types';
+import { api } from '@renderer/services/api';
 import { Button, Input } from '@renderer/ui/components';
 
 const emptyForm: ServiceInput = {
@@ -10,30 +11,26 @@ const emptyForm: ServiceInput = {
 };
 
 export const ServicesPage = () => {
-  const [services, setServices] = useState<Service[]>([]);  
   const [items, setItems] = useState<Service[]>([]);
   const [form, setForm] = useState<ServiceInput>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const load = async () => {
-    const data = await window.desktopApi.listServices(false);
+    const data = await api.listServices(false);
     setItems(data);
   };
 
   useEffect(() => {
-    useEffect(() => {
-    window.desktopApi.listServices(true).then(setServices);
-    }, []);
-    load();
+    void load();
   }, []);
 
   const submit = async () => {
     if (!form.name.trim()) return;
 
     if (editingId) {
-      await window.desktopApi.updateService(editingId, form);
+      await api.updateService(editingId, form);
     } else {
-      await window.desktopApi.createService(form);
+      await api.createService(form);
     }
 
     setForm(emptyForm);
@@ -52,7 +49,7 @@ export const ServicesPage = () => {
   };
 
   const remove = async (id: number) => {
-    await window.desktopApi.deleteService(id);
+    await api.deleteService(id);
     await load();
   };
 

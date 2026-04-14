@@ -4,6 +4,39 @@ import type { Invoice, InvoiceDetail } from '../../../shared/types.js';
 
 const buildTicketCode = (orderNumber: string) => `TK-${orderNumber}`;
 
+type InvoiceMessageItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  customerObservations: string | null;
+};
+
+type InvoiceRow = {
+  id: number;
+  invoice_number: string;
+  order_id: number;
+  client_id: number;
+  client_name: string;
+  client_phone?: string | null;
+  subtotal: string | number;
+  tax_total: string | number;
+  total: string | number;
+  legal_text: string | null;
+  due_date: Date | null;
+  order_notes?: string | null;
+  paid_total?: string | number;
+  balance_due?: string | number;
+  ticket_code: string;
+  company_name?: string | null;
+  company_phone?: string | null;
+  company_address?: string | null;
+  company_nit?: string | null;
+  company_logo?: string | null;
+  company_policies?: string | null;
+  created_at: Date;
+};
+
 const buildWhatsappMessage = (invoice: {
   invoiceNumber: string;
   clientName: string;
@@ -16,7 +49,7 @@ const buildWhatsappMessage = (invoice: {
   balanceDue: number;
   ticketCode: string;
   companyName: string | null;
-  items: Array<any>;
+  items: InvoiceMessageItem[];
 }) => {
   const formatMoney = (value: number) =>
     `$${Number(value ?? 0).toLocaleString('es-CO')}`;
@@ -61,7 +94,7 @@ const buildWhatsappMessage = (invoice: {
   return lines.join('\n');
 };
 
-const mapInvoice = (row: any): Invoice => ({
+const mapInvoice = (row: InvoiceRow): Invoice => ({
   id: row.id,
   invoiceNumber: row.invoice_number,
   orderId: row.order_id,

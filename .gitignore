@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-electron/
+release/
+google-oauth.json
+.DS_Store
+src/.DS_Store
+*.log

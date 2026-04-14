@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Client } from '@shared/types';
+import type { Client, ClientInput } from '@shared/types';
 import { api } from '@renderer/services/api';
 import { useModal } from '@renderer/hooks/useModal';
 import { Button, DataTable, Modal, PageHeader } from '@renderer/ui/components';
@@ -16,7 +16,7 @@ export const ClientsPage = () => {
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['clients'] }); await queryClient.invalidateQueries({ queryKey: ['dashboard'] }); }
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => api.updateClient(id, data),
+    mutationFn: ({ id, data }: { id: number; data: ClientInput }) => api.updateClient(id, data),
     onSuccess: async () => { editModal.close(); await queryClient.invalidateQueries({ queryKey: ['clients'] }); }
   });
   const deleteMutation = useMutation({

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CompanySettings, OrderProtectionPasswordInput } from '@shared/types';
 import { api } from '@renderer/services/api';
 import { Button, DataTable, Input, PageHeader } from '@renderer/ui/components';
 
@@ -16,12 +17,10 @@ export const SettingsPage = () => {
     queryFn: api.listBackups
   });
 
- 
-
-  const [form, setForm] = useState<any>({});
+  const [form, setForm] = useState<Partial<CompanySettings>>({});
   const [currentAdminPassword, setCurrentAdminPassword] = useState('');
-const [newAdminPassword, setNewAdminPassword] = useState('');
-const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
 
   useEffect(() => {
     if (data) setForm(data);
@@ -41,18 +40,26 @@ const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
   });
 
   const updateAdminPasswordMutation = useMutation({
-  mutationFn: api.updateOrderProtectionPassword,
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['order-protection-password'] });
-
-    setCurrentAdminPassword('');
-    setNewAdminPassword('');
-    setConfirmAdminPassword('');
-  }
-});
+    mutationFn: (input: OrderProtectionPasswordInput) =>
+      api.updateOrderProtectionPassword(input),
+    onSuccess: async () => {
+      setCurrentAdminPassword('');
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
+    }
+  });
 
   const handleSave = async () => {
-    await api.updateCompanySettings(form);
+    await api.updateCompanySettings({
+      companyName: form.companyName ?? '',
+      legalName: form.legalName ?? null,
+      phone: form.phone ?? null,
+      email: form.email ?? null,
+      address: form.address ?? null,
+      nit: form.nit ?? null,
+      logoBase64: form.logoBase64 ?? null,
+      invoicePolicies: form.invoicePolicies ?? null
+    });
     await refetch();
     alert('Guardado correctamente ✅');
   };
@@ -61,9 +68,9 @@ const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
     const reader = new FileReader();
 
     reader.onload = () => {
-      setForm((prev: any) => ({
+      setForm((prev) => ({
         ...prev,
-        logoBase64: reader.result
+        logoBase64: typeof reader.result === 'string' ? reader.result : null
       }));
     };
 

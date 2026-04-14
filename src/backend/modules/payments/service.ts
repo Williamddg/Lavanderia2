@@ -10,7 +10,18 @@ const schema = z.object({
   reference: z.string().nullable()
 });
 
-const mapPayment = (row: any): Payment => ({
+type PaymentRow = {
+  id: number;
+  order_id: number;
+  invoice_id: number | null;
+  payment_method_id: number;
+  payment_method_name: string;
+  amount: string | number;
+  reference: string | null;
+  created_at: Date;
+};
+
+const mapPayment = (row: PaymentRow): Payment => ({
   id: row.id,
   orderId: row.order_id,
   invoiceId: row.invoice_id,

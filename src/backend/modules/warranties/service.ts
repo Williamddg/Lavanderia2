@@ -18,7 +18,21 @@ const updateSchema = z.object({
   resolution: z.string().nullable()
 });
 
-const mapWarranty = (row: any): WarrantyRecord => ({
+type WarrantyRow = {
+  id: number;
+  order_id: number;
+  order_number: string;
+  client_name: string;
+  status_id: number;
+  status_code: string;
+  status_name: string;
+  status_color: string;
+  reason: string;
+  resolution: string | null;
+  created_at: Date;
+};
+
+const mapWarranty = (row: WarrantyRow): WarrantyRecord => ({
   id: row.id,
   orderId: row.order_id,
   orderNumber: row.order_number,

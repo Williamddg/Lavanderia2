@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import type { OrderInput } from '@shared/types';
 import { api } from '@renderer/services/api';
 import {
   Button,
@@ -148,7 +149,7 @@ export const OrderDetailPage = () => {
   });
 
   const updateOrderMutation = useMutation({
-    mutationFn: (input: any) => api.updateOrder(orderId, input),
+    mutationFn: (input: OrderInput) => api.updateOrder(orderId, input),
     onSuccess: async () => {
       setEditModal(false);
       await queryClient.invalidateQueries({ queryKey: ['order-detail', orderId] });
@@ -450,7 +451,7 @@ export const OrderDetailPage = () => {
           </div>
         );
     }
-  }, [activeTab, data, catalogs, updateStatusMutation, clients]);
+  }, [activeTab, data, catalogs, updateStatusMutation]);
 
   if (!data) return <section className="card-panel">Cargando detalle...</section>;
 

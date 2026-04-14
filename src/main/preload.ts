@@ -1,9 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   ClientInput,
+  CompanySettingsInput,
   DbConnectionConfig,
   DeliveryInput,
   ExternalLinkPayload,
+  OrderProtectionPasswordInput,
   LoginInput,
   OrderInput,
   PaymentInput,
@@ -14,14 +16,7 @@ contextBridge.exposeInMainWorld('desktopApi', {
   verifyPassword: (password: string) =>
     ipcRenderer.invoke('auth:verify-password', password),
 
-  getOrderProtectionPassword: () =>
-    ipcRenderer.invoke('settings:get-order-protection-password'),
-
-  updateOrderProtectionPassword: (input: {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}) =>
+  updateOrderProtectionPassword: (input: OrderProtectionPasswordInput) =>
   ipcRenderer.invoke('settings:update-order-protection-password', input),
 
   getLicenseStatus: () => ipcRenderer.invoke('license:status'),
@@ -34,7 +29,7 @@ contextBridge.exposeInMainWorld('desktopApi', {
   listPrinters: () => ipcRenderer.invoke('printers:list'),
   openCashDrawer: (printerName?: string) => ipcRenderer.invoke('printer:open-drawer', printerName),
 
-  updateCompanySettings: (input: any) =>
+  updateCompanySettings: (input: CompanySettingsInput) =>
     ipcRenderer.invoke('settings:update-company', input),
   getReportsSummary: (from?: string, to?: string) =>
     ipcRenderer.invoke('reports:summary', from, to),

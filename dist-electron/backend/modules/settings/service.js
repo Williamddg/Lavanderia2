@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSettingsService = void 0;
+const password_js_1 = require("../../security/password.js");
 const createSettingsService = (db) => ({
     async getCompanySettings() {
         const row = await db
@@ -59,22 +60,10 @@ const createSettingsService = (db) => ({
             invoicePolicies: row.invoice_policies ?? null
         };
     },
-    async getOrderProtectionPassword() {
-        const setting = await db
-            .selectFrom('app_settings')
-            .select(['setting_value'])
-            .where('setting_key', '=', 'order_protection_password')
-            .orderBy('id desc')
-            .executeTakeFirst();
-        return setting ? String(setting.setting_value ?? '').trim() : null;
-    },
     async updateOrderProtectionPassword(input) {
         const currentPassword = String(input.currentPassword ?? '').trim();
         const newPassword = String(input.newPassword ?? '').trim();
         const confirmPassword = String(input.confirmPassword ?? '').trim();
-        if (!currentPassword) {
-            throw new Error('Debes ingresar la contraseña actual.');
-        }
         if (!newPassword || newPassword.length < 4) {
             throw new Error('La nueva contraseña debe tener al menos 4 caracteres.');
         }
@@ -92,12 +81,15 @@ const createSettingsService = (db) => ({
                 .insertInto('app_settings')
                 .values({
                 setting_key: 'order_protection_password',
-                setting_value: String(newPassword)
+                setting_value: (0, password_js_1.hashPassword)(newPassword)
             })
                 .execute();
             return { success: true };
         }
-        if (String(existing.setting_value ?? '').trim() !== currentPassword) {
+        if (!currentPassword) {
+            throw new Error('Debes ingresar la contraseña actual.');
+        }
+        if (!(0, password_js_1.verifyPasswordHash)(currentPassword, String(existing.setting_value ?? ''))) {
             throw new Error('La contraseña actual es incorrecta.');
         }
         if (currentPassword === newPassword) {
@@ -106,7 +98,7 @@ const createSettingsService = (db) => ({
         await db
             .updateTable('app_settings')
             .set({
-            setting_value: String(newPassword)
+            setting_value: (0, password_js_1.hashPassword)(newPassword)
         })
             .where('id', '=', existing.id)
             .execute();

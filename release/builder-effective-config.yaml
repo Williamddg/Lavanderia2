@@ -11,8 +11,6 @@ files:
 extraResources:
   - from: resources/bin
     to: bin
-  - from: google-oauth.json
-    to: google-oauth.json
 publish:
   - provider: github
     owner: santiagomontanes
@@ -21,6 +19,16 @@ publish:
 win:
   target:
     - nsis
+mac:
+  category: public.app-category.business
+  target:
+    - dmg
+    - zip
+linux:
+  category: Office
+  target:
+    - AppImage
+    - deb
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

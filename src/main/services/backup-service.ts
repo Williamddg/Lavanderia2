@@ -2,27 +2,34 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { shell } from 'electron';
+import { spawn } from 'node:child_process';
+import { app, shell } from 'electron';
 import { google } from 'googleapis';
 import { databaseManager } from './database-manager.js';
-
-const execAsync = promisify(exec);
 
 const GOOGLE_REDIRECT_URI = 'http://127.0.0.1:3017/oauth2callback';
 const GOOGLE_SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
+type OAuthTokens = {
+  access_token?: string | null;
+  refresh_token?: string | null;
+  scope?: string | null;
+  token_type?: string | null;
+  expiry_date?: number | null;
+};
+
 class BackupService {
   private getGoogleCredentialsPath() {
-    const packagedPath = path.join(process.resourcesPath, 'google-oauth.json');
+    const envPath = process.env.GOOGLE_OAUTH_PATH;
+    const userDataPath = path.join(app.getPath('userData'), 'google-oauth.json');
     const devPath = path.join(process.cwd(), 'google-oauth.json');
 
-    if (fs.existsSync(packagedPath)) return packagedPath;
+    if (envPath && fs.existsSync(envPath)) return envPath;
+    if (fs.existsSync(userDataPath)) return userDataPath;
     if (fs.existsSync(devPath)) return devPath;
 
     throw new Error(
-      'No existe google-oauth.json. Debe estar en la raíz del proyecto o empaquetado en resources.'
+      'No existe google-oauth.json. Usa GOOGLE_OAUTH_PATH, copia el archivo a userData o déjalo en la raíz del proyecto en desarrollo.'
     );
   }
 
@@ -42,16 +49,22 @@ class BackupService {
     );
   }
 
-  private getMysqldumpPath() {
-    const packagedPath = path.join(process.resourcesPath, 'bin', 'mysqldump.exe');
-    const devPath = path.join(process.cwd(), 'resources', 'bin', 'mysqldump.exe');
+  private getMysqldumpCommand() {
+    const envPath = process.env.MYSQLDUMP_PATH;
+    const packagedWinPath = path.join(process.resourcesPath, 'bin', 'mysqldump.exe');
+    const devWinPath = path.join(process.cwd(), 'resources', 'bin', 'mysqldump.exe');
 
-    if (fs.existsSync(packagedPath)) return packagedPath;
-    if (fs.existsSync(devPath)) return devPath;
+    if (envPath && fs.existsSync(envPath)) {
+      return envPath;
+    }
 
-    throw new Error(
-      'No se encontró mysqldump.exe. Debe existir en resources/bin/mysqldump.exe'
-    );
+    if (process.platform === 'win32') {
+      if (fs.existsSync(packagedWinPath)) return packagedWinPath;
+      if (fs.existsSync(devWinPath)) return devWinPath;
+      return 'mysqldump.exe';
+    }
+
+    return 'mysqldump';
   }
 
   private async getTokenRow(userId?: number) {
@@ -102,7 +115,7 @@ class BackupService {
       scope: GOOGLE_SCOPES
     });
 
-    const tokens = await new Promise<any>((resolve, reject) => {
+    const tokens = await new Promise<OAuthTokens>((resolve, reject) => {
       const server = http.createServer(async (req, res) => {
         try {
           const reqUrl = new URL(req.url || '', GOOGLE_REDIRECT_URI);
@@ -201,7 +214,7 @@ class BackupService {
       throw new Error('La base de datos no está configurada.');
     }
 
-    const mysqldumpPath = this.getMysqldumpPath();
+    const mysqldumpCommand = this.getMysqldumpCommand();
 
     const now = new Date();
     const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
@@ -213,18 +226,50 @@ class BackupService {
     const fileName = `backup_${config.database}_${stamp}.sql`;
     const filePath = path.join(os.tmpdir(), fileName);
 
-    const command = `"${mysqldumpPath}" -h ${config.host} -P ${config.port} -u ${config.user} -p${config.password} ${config.database} > "${filePath}"`;
+    const args = [
+      '-h',
+      config.host,
+      '-P',
+      String(config.port),
+      '-u',
+      config.user,
+      `-p${config.password}`,
+      '--single-transaction',
+      '--routines',
+      '--triggers',
+      config.database
+    ];
 
-    try {
-      await execAsync(command);
-    } catch (error: any) {
-      throw new Error(
-        error?.stderr?.trim() ||
-          error?.stdout?.trim() ||
-          error?.message ||
-          'No se pudo ejecutar mysqldump.'
-      );
-    }
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(mysqldumpCommand, args, {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      const output = fs.createWriteStream(filePath);
+      let stderr = '';
+
+      child.stdout.pipe(output);
+      child.stderr.on('data', (chunk) => {
+        stderr += String(chunk);
+      });
+      child.on('error', (error) => {
+        output.close();
+        reject(
+          new Error(
+            `No se pudo ejecutar mysqldump. Instala mysql-client o define MYSQLDUMP_PATH. Detalle: ${error.message}`
+          )
+        );
+      });
+      child.on('close', (code) => {
+        output.end(() => {
+          if (code === 0) {
+            resolve();
+            return;
+          }
+
+          reject(new Error(stderr.trim() || 'No se pudo ejecutar mysqldump.'));
+        });
+      });
+    });
 
     if (!fs.existsSync(filePath)) {
       throw new Error('No se pudo generar el archivo de backup.');

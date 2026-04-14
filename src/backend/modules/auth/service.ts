@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import type { LoginInput, SessionUser } from '../../../shared/types.js';
+import { hashPassword, isSecurePasswordHash, verifyPasswordHash } from '../../security/password.js';
 
 const schema = z.object({
   username: z.string().min(3),
@@ -30,8 +31,18 @@ export const createAuthService = (db: Kysely<Database>) => ({
       .where('u.is_active', '=', 1)
       .executeTakeFirst();
 
-    if (!user || user.password_hash !== parsed.password) {
+    if (!user || !verifyPasswordHash(parsed.password, user.password_hash)) {
       throw new Error('Credenciales inválidas.');
+    }
+
+    if (!isSecurePasswordHash(user.password_hash)) {
+      await db
+        .updateTable('users')
+        .set({
+          password_hash: hashPassword(parsed.password)
+        })
+        .where('id', '=', user.id)
+        .execute();
     }
 
     await db
@@ -63,8 +74,20 @@ export const createAuthService = (db: Kysely<Database>) => ({
       .where('setting_key', '=', 'order_protection_password')
       .executeTakeFirst();
 
-    if (!setting || String(setting.setting_value ?? '') !== parsed.password) {
+    const storedValue = String(setting?.setting_value ?? '');
+
+    if (!setting || !verifyPasswordHash(parsed.password, storedValue)) {
       throw new Error('Contraseña administrativa incorrecta.');
+    }
+
+    if (!isSecurePasswordHash(storedValue)) {
+      await db
+        .updateTable('app_settings')
+        .set({
+          setting_value: hashPassword(parsed.password)
+        })
+        .where('id', '=', setting.id)
+        .execute();
     }
 
     await db

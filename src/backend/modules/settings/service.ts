@@ -1,6 +1,11 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
-import type { CompanySettings } from '../../../shared/types.js';
+import type {
+  CompanySettings,
+  CompanySettingsInput,
+  OrderProtectionPasswordInput
+} from '../../../shared/types.js';
+import { hashPassword, verifyPasswordHash } from '../../security/password.js';
 
 export const createSettingsService = (db: Kysely<Database>) => ({
   async getCompanySettings(): Promise<CompanySettings | null> {
@@ -27,16 +32,7 @@ export const createSettingsService = (db: Kysely<Database>) => ({
     };
   },
 
-  async updateCompanySettings(input: {
-    companyName: string;
-    legalName?: string | null;
-    phone?: string | null;
-    email?: string | null;
-    address?: string | null;
-    nit?: string | null;
-    logoBase64?: string | null;
-    invoicePolicies?: string | null;
-  }): Promise<CompanySettings | null> {
+  async updateCompanySettings(input: CompanySettingsInput): Promise<CompanySettings | null> {
     await db
       .updateTable('company_settings')
       .set({
@@ -74,29 +70,12 @@ export const createSettingsService = (db: Kysely<Database>) => ({
     };
   },
 
-  async getOrderProtectionPassword(): Promise<string | null> {
-    const setting = await db
-      .selectFrom('app_settings')
-      .select(['setting_value'])
-      .where('setting_key', '=', 'order_protection_password')
-      .orderBy('id desc')
-      .executeTakeFirst();
-
-    return setting ? String(setting.setting_value ?? '').trim() : null;
-  },
-
-  async updateOrderProtectionPassword(input: {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-  }): Promise<{ success: true }> {
+  async updateOrderProtectionPassword(
+    input: OrderProtectionPasswordInput
+  ): Promise<{ success: true }> {
     const currentPassword = String(input.currentPassword ?? '').trim();
     const newPassword = String(input.newPassword ?? '').trim();
     const confirmPassword = String(input.confirmPassword ?? '').trim();
-
-    if (!currentPassword) {
-      throw new Error('Debes ingresar la contraseña actual.');
-    }
 
     if (!newPassword || newPassword.length < 4) {
       throw new Error('La nueva contraseña debe tener al menos 4 caracteres.');
@@ -118,14 +97,18 @@ export const createSettingsService = (db: Kysely<Database>) => ({
         .insertInto('app_settings')
         .values({
           setting_key: 'order_protection_password',
-          setting_value: String(newPassword)
+          setting_value: hashPassword(newPassword)
         })
         .execute();
 
       return { success: true };
     }
 
-    if (String(existing.setting_value ?? '').trim() !== currentPassword) {
+    if (!currentPassword) {
+      throw new Error('Debes ingresar la contraseña actual.');
+    }
+
+    if (!verifyPasswordHash(currentPassword, String(existing.setting_value ?? ''))) {
       throw new Error('La contraseña actual es incorrecta.');
     }
 
@@ -136,7 +119,7 @@ export const createSettingsService = (db: Kysely<Database>) => ({
     await db
       .updateTable('app_settings')
       .set({
-        setting_value: String(newPassword)
+        setting_value: hashPassword(newPassword)
       })
       .where('id', '=', existing.id)
       .execute();

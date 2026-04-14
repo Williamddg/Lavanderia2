@@ -35,6 +35,9 @@ import type {
   BackupUploadResult,
   ConnectDriveResult,
   CashOpenInput,
+  CompanySettingsInput,
+  LicenseStatus,
+  OrderProtectionPasswordInput
 } from '@shared/types';
 
 async function unwrap<T>(promise: Promise<unknown>): Promise<T> {
@@ -44,9 +47,9 @@ async function unwrap<T>(promise: Promise<unknown>): Promise<T> {
 }
 
 export const api = {
-  licenseStatus: () => unwrap<any>(window.desktopApi.getLicenseStatus()),
+  licenseStatus: () => unwrap<LicenseStatus>(window.desktopApi.getLicenseStatus()),
   activateLicense: (licenseKey: string) =>
-    unwrap<any>(window.desktopApi.activateLicense(licenseKey)),
+    unwrap<LicenseStatus>(window.desktopApi.activateLicense(licenseKey)),
 
   connectDriveBackup: () =>
     unwrap<ConnectDriveResult>(window.desktopApi.connectDriveBackup()),
@@ -61,17 +64,10 @@ export const api = {
   openCashDrawer: (printerName?: string) =>
     unwrap<OpenDrawerResult>(window.desktopApi.openCashDrawer(printerName)),
 
-  updateCompanySettings: (input: any) =>
-    unwrap(window.desktopApi.updateCompanySettings(input)),
+  updateCompanySettings: (input: CompanySettingsInput) =>
+    unwrap<CompanySettings | null>(window.desktopApi.updateCompanySettings(input)),
 
-  getOrderProtectionPassword: () =>
-    unwrap<string | null>(window.desktopApi.getOrderProtectionPassword()),
-
-  updateOrderProtectionPassword: (input: {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}) =>
+  updateOrderProtectionPassword: (input: OrderProtectionPasswordInput) =>
   unwrap<{ success: true }>(
     window.desktopApi.updateOrderProtectionPassword(input)
   ),

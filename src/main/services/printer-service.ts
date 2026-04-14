@@ -1,5 +1,4 @@
 import { BrowserWindow } from 'electron';
-import printer from '@alexssmusica/node-printer';
 
 export type PrinterInfo = {
   name: string;
@@ -30,6 +29,7 @@ class PrinterService {
   }
 
   async openDrawer(printerName?: string) {
+    const printerModule = await this.loadPrinterModule();
     const printers = await this.listPrinters();
 
     const selected =
@@ -42,7 +42,7 @@ class PrinterService {
     }
 
     await new Promise<void>((resolve, reject) => {
-      printer.printDirect({
+      printerModule.printDirect({
         printer: selected.name,
         data: CASH_DRAWER_PULSE,
         type: 'RAW',
@@ -57,6 +57,19 @@ class PrinterService {
       printerName: selected.name,
       message: `Cajón abierto por la impresora: ${selected.name}`
     };
+  }
+
+  private async loadPrinterModule() {
+    try {
+      const module = await import('@alexssmusica/node-printer');
+      return module.default;
+    } catch (error) {
+      throw new Error(
+        `La integración nativa de impresión no está disponible en esta instalación. Rebuild requerido para ${process.platform}/${process.arch}. ${
+          error instanceof Error ? error.message : ''
+        }`.trim()
+      );
+    }
   }
 }
 

@@ -34,6 +34,23 @@ export type LoginInput = {
   rememberMe?: boolean;
 };
 
+export type CompanySettingsInput = {
+  companyName: string;
+  legalName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  nit?: string | null;
+  logoBase64?: string | null;
+  invoicePolicies?: string | null;
+};
+
+export type OrderProtectionPasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
 export type CompanySettings = {
   id: number;
   companyName: string;
@@ -205,6 +222,18 @@ export type BackupUploadResult = {
 export type ConnectDriveResult = {
   success: boolean;
   message: string;
+};
+
+export type LicenseStatus = {
+  valid: boolean;
+  requiresActivation: boolean;
+  warning?: boolean;
+  offlineGrace?: boolean;
+  daysLeft?: number;
+  expiresAt?: string;
+  message: string;
+  businessName?: string | null;
+  phone?: string | null;
 };
 
 export type PrinterInfo = {

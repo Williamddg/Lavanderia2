@@ -1,7 +1,15 @@
 import { databaseManager } from './database-manager.js';
 import type { Service, ServiceInput } from '../../shared/types.js';
 
-const mapServiceRow = (row: any): Service => ({
+type ServiceRow = {
+  id: number;
+  category_id: number | null;
+  name: string;
+  base_price: string | number;
+  is_active: number;
+};
+
+const mapServiceRow = (row: ServiceRow): Service => ({
   id: row.id,
   categoryId: row.category_id ?? null,
   name: row.name,

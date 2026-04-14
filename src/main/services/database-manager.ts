@@ -1,14 +1,19 @@
 import mysql from 'mysql2/promise';
+import ElectronStore from 'electron-store';
 import type { Kysely } from 'kysely';
 import { createDb } from '../../backend/db/connection.js';
 import { runMigrations } from '../../backend/db/migrator.js';
 import type { Database } from '../../backend/db/schema.js';
 import type { DbConnectionConfig, HealthStatus } from '../../shared/types.js';
 
-const ElectronStore = require('electron-store').default;
+type SettingsStore = {
+  get: (key: 'dbConfig') => DbConnectionConfig | undefined;
+  set: (key: 'dbConfig', value: DbConnectionConfig) => void;
+};
+
 const store = new ElectronStore({
   name: 'lavanderia-settings'
-}) as any;
+}) as unknown as SettingsStore;
 
 class DatabaseManager {
   private db: Kysely<Database> | null = null;

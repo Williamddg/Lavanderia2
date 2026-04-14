@@ -10,10 +10,19 @@ const expenseSchema = z.object({
   expenseDate: z.string().min(1)
 });
 
+type ExpenseRow = {
+  id: number;
+  cash_session_id: number | null;
+  category_id: number;
+  category_name?: string;
+  amount: string | number;
+  description: string;
+  expense_date: Date | string;
+  created_by: number | null;
+  created_at: Date;
+};
 
-
-
-const mapExpense = (row: any): Expense => ({
+const mapExpense = (row: ExpenseRow): Expense => ({
   id: row.id,
   cashSessionId: row.cash_session_id ?? null,
   categoryId: row.category_id,

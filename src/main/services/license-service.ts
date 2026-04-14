@@ -1,8 +1,7 @@
 import os from 'node:os';
 import crypto from 'node:crypto';
+import ElectronStore from 'electron-store';
 import { createClient } from '@supabase/supabase-js';
-
-const ElectronStore = require('electron-store').default;
 
 type LicenseCache = {
   licenseKey: string;
@@ -14,9 +13,15 @@ type LicenseCache = {
   phone?: string | null;
 };
 
+type LicenseStore = {
+  get: (key: 'license') => LicenseCache | undefined;
+  set: (key: 'license', value: LicenseCache) => void;
+  delete: (key: 'license') => void;
+};
+
 const store = new ElectronStore({
   name: 'license-store'
-}) as any;
+}) as unknown as LicenseStore;
 
 const SUPABASE_URL = 'https://wswuifmfauepefrtaonf.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_aun5sv8y2isZI_ISPRfeDg_3rBQP6Rp';
@@ -30,7 +35,7 @@ const getMachineId = () => {
 
 class LicenseService {
   getCached(): LicenseCache | null {
-    return (store.get('license') as LicenseCache | undefined) ?? null;
+    return store.get('license') ?? null;
   }
 
   saveCached(data: LicenseCache) {

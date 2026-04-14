@@ -4,20 +4,26 @@
   "private": true,
   "type": "commonjs",
   "description": "Aplicación de escritorio para gestión de lavandería y sastrería",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "main": "dist-electron/main/main.js",
   "scripts": {
-    "dist:local": "npm run build && electron-builder --win nsis --publish never",
-    "dist:win": "npm run build && electron-builder --win nsis --publish always",
-    "dev:renderer": "vite",
-    "dev:electron": "tsc -p tsconfig.electron.json --watch",
-    "dev:app": "wait-on http-get://localhost:5173 dist-electron/main/main.js && npx electron .",
-    "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:app\"",
-    "build": "vite build && tsc -p tsconfig.electron.json",
-    "dist": "npm run build && electron-builder",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json",
-    "lint": "eslint . --ext .ts,.tsx",
-    "start": "electron .",
-    "postinstall": "electron-rebuild"
+    "dist:local": "npm run build && node node_modules/electron-builder/cli.js --win nsis --publish never",
+    "dist:win": "npm run build && node node_modules/electron-builder/cli.js --win nsis --publish always",
+    "dist:mac": "npm run build && node node_modules/electron-builder/cli.js --mac dmg zip --publish never",
+    "dist:linux": "npm run build && node node_modules/electron-builder/cli.js --linux AppImage deb --publish never",
+    "dev:renderer": "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173",
+    "dev:electron": "node node_modules/typescript/bin/tsc -p tsconfig.electron.json --watch",
+    "dev:app": "node node_modules/wait-on/bin/wait-on http-get://localhost:5173 dist-electron/main/main.js && node node_modules/electron/cli.js .",
+    "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:app\"",
+    "dev:debug": "ELECTRON_OPEN_DEVTOOLS=1 node node_modules/concurrently/dist/bin/concurrently.js \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:app\"",
+    "build": "node node_modules/vite/bin/vite.js build && node node_modules/typescript/bin/tsc -p tsconfig.electron.json",
+    "dist": "npm run build && node node_modules/electron-builder/cli.js",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json && node node_modules/typescript/bin/tsc --noEmit -p tsconfig.electron.json",
+    "lint": "node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx",
+    "start": "node node_modules/electron/cli.js .",
+    "postinstall": "node node_modules/electron-rebuild/lib/src/cli.js"
   },
   "build": {
     "appId": "com.sistetecni.lavanderia",
@@ -34,10 +40,6 @@
       {
         "from": "resources/bin",
         "to": "bin"
-      },
-      {
-        "from": "google-oauth.json",
-        "to": "google-oauth.json"
       }
     ],
     "publish": [
@@ -53,6 +55,20 @@
         "nsis"
       ]
     },
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "category": "Office",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -61,7 +77,6 @@
     }
   },
   "dependencies": {
-    "@alexssmusica/node-printer": "^0.8.1",
     "@supabase/supabase-js": "^2.101.1",
     "@tanstack/react-query": "^5.76.1",
     "dayjs": "^1.11.13",
@@ -77,6 +92,9 @@
     "react-router-dom": "^6.30.0",
     "zod": "^3.24.3"
   },
+  "optionalDependencies": {
+    "@alexssmusica/node-printer": "^0.8.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
     "@types/node": "^22.14.1",
@@ -84,7 +102,7 @@
     "@types/react-dom": "^18.3.6",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
-    "electron": "^35.1.5",
+    "electron": "^35.7.5",
     "electron-builder": "^26.8.1",
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.24.0",

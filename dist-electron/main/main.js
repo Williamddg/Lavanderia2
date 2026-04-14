@@ -8,6 +8,8 @@ const node_path_1 = __importDefault(require("node:path"));
 const register_1 = require("./ipc/register");
 const electron_updater_1 = require("electron-updater");
 const isDev = !electron_1.app.isPackaged;
+const rendererPath = node_path_1.default.join(electron_1.app.getAppPath(), 'dist', 'index.html');
+const shouldOpenDevTools = process.env.ELECTRON_OPEN_DEVTOOLS === '1';
 const createWindow = async () => {
     const mainWindow = new electron_1.BrowserWindow({
         width: 1480,
@@ -18,17 +20,19 @@ const createWindow = async () => {
         webPreferences: {
             preload: node_path_1.default.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            nodeIntegration: false
+            nodeIntegration: false,
+            sandbox: true
         }
     });
     try {
         if (isDev) {
             await mainWindow.loadURL('http://localhost:5173');
-            mainWindow.webContents.openDevTools();
+            if (shouldOpenDevTools) {
+                mainWindow.webContents.openDevTools();
+            }
         }
         else {
-            const indexPath = node_path_1.default.join(electron_1.app.getAppPath(), 'dist', 'index.html');
-            await mainWindow.loadFile(indexPath);
+            await mainWindow.loadFile(rendererPath);
             // 👉 SOLO abre devtools si quieres debug en producción
             // mainWindow.webContents.openDevTools()
         }

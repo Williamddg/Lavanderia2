@@ -1,80 +1,69 @@
-# LavaSuite Desktop · MVP funcional por fases
+# LavaSuite Desktop
 
-Aplicación de escritorio para lavandería y sastrería construida con Electron, React, TypeScript, Node.js y MySQL, diseñada como single-tenant por instalación.
+Aplicación de escritorio para lavandería y sastrería construida con Electron, React, TypeScript y MySQL.
 
-## Estructura base
+## Arquitectura
 
 ```text
 src/
-  backend/
-    db/
-      connection.ts
-      schema.ts
-      migrator.ts
-      migrations/
-    modules/
-      auth/
-      cash/
-      clients/
-      deliveries/
-      invoices/
-      orders/
-      payments/
-      settings/
-  main/
-    ipc/
-    services/
-    main.ts
-    preload.ts
-  renderer/
-    modules/
-      auth/
-      cash/
-      clients/
-      dashboard/
-      deliveries/
-      invoices/
-      orders/
-      payments/
-      shared/
-    hooks/
-    services/
-    ui/
-      components/
-      layouts/
-    utils/
-    styles/
-  shared/
-    types.ts
+  backend/    # dominio, base de datos y servicios de negocio
+  main/       # proceso principal de Electron, preload e IPC
+  renderer/   # interfaz React
+  shared/     # tipos compartidos
 ```
 
-## Estado actual del MVP
+## Requisitos
 
-### Fase 1 completada
-- configuración MySQL por instalación
-- login funcional con auditoría
-- layout comercial base
-- dashboard inicial
-- CRUD de clientes
+- Node.js 22
+- npm 10+
+- Docker Desktop para desarrollo recomendado
+- En macOS: Xcode Command Line Tools
 
-### Fase 2 iniciada
-- órdenes con múltiples ítems
-- detalle completo de orden
-- registrar pago
-- generar factura
-- caja activa
-- entregar orden
+## Desarrollo Rápido En macOS Intel
 
-## Flujo operativo disponible
+1. Instala dependencias:
 
-Dashboard → Nueva orden → Detalle de orden → Registrar pago → Generar factura → Entregar orden.
+```bash
+npm install
+```
 
-## Cómo correr
+2. Levanta MySQL con Docker:
 
-1. Instala dependencias.
-2. Ejecuta `npm run dev`.
-3. Configura la conexión MySQL en la primera pantalla.
-4. Ingresa con `admin / admin`.
+```bash
+docker compose up -d
+```
+
+3. Inicia la app:
+
+```bash
+npm run dev
+```
+
+4. En la pantalla inicial usa:
+
+- Host: `127.0.0.1`
+- Puerto: `3306`
+- Usuario: `lavanderia`
+- Contraseña: `lavanderia_dev`
+- Base de datos: `lavanderia`
+
+5. Ingresa con:
+
+- Usuario: `admin`
+- Contraseña: `admin`
+
+La primera autenticación actualiza el hash del usuario legado automáticamente.
+
+## Impresión y Backup
+
+- La integración con impresoras/cajón es opcional y puede requerir rebuild del módulo nativo:
+
+```bash
+npx electron-rebuild -f -w @alexssmusica/node-printer
+```
+
+- Para backups SQL en macOS/Linux instala `mysql-client` para disponer de `mysqldump` en tu PATH.
+- Si quieres usar Google Drive, define `GOOGLE_OAUTH_PATH` o copia `google-oauth.json` al directorio `userData` de la app. Ya no se empaqueta dentro del instalador.
 
 ## Scripts
 
@@ -82,3 +71,14 @@ Dashboard → Nueva orden → Detalle de orden → Registrar pago → Generar fa
 - `npm run build`
 - `npm run typecheck`
 - `npm run lint`
+- `npm run dist:win`
+- `npm run dist:mac`
+- `npm run dist:linux`
+
+## Distribución
+
+La app se empaqueta de forma nativa:
+
+- Windows: NSIS
+- macOS: DMG y ZIP
+- Linux: AppImage y DEB

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAuthService = void 0;
 const zod_1 = require("zod");
 const kysely_1 = require("kysely");
+const password_js_1 = require("../../security/password.js");
 const schema = zod_1.z.object({
     username: zod_1.z.string().min(3),
     password: zod_1.z.string().min(3)
@@ -27,8 +28,17 @@ const createAuthService = (db) => ({
             .where('u.username', '=', parsed.username)
             .where('u.is_active', '=', 1)
             .executeTakeFirst();
-        if (!user || user.password_hash !== parsed.password) {
+        if (!user || !(0, password_js_1.verifyPasswordHash)(parsed.password, user.password_hash)) {
             throw new Error('Credenciales inválidas.');
+        }
+        if (!(0, password_js_1.isSecurePasswordHash)(user.password_hash)) {
+            await db
+                .updateTable('users')
+                .set({
+                password_hash: (0, password_js_1.hashPassword)(parsed.password)
+            })
+                .where('id', '=', user.id)
+                .execute();
         }
         await db
             .insertInto('audit_logs')
@@ -55,8 +65,18 @@ const createAuthService = (db) => ({
             .select(['id', 'setting_value'])
             .where('setting_key', '=', 'order_protection_password')
             .executeTakeFirst();
-        if (!setting || String(setting.setting_value ?? '') !== parsed.password) {
+        const storedValue = String(setting?.setting_value ?? '');
+        if (!setting || !(0, password_js_1.verifyPasswordHash)(parsed.password, storedValue)) {
             throw new Error('Contraseña administrativa incorrecta.');
+        }
+        if (!(0, password_js_1.isSecurePasswordHash)(storedValue)) {
+            await db
+                .updateTable('app_settings')
+                .set({
+                setting_value: (0, password_js_1.hashPassword)(parsed.password)
+            })
+                .where('id', '=', setting.id)
+                .execute();
         }
         await db
             .insertInto('audit_logs')

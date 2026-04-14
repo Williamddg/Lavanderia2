@@ -4,7 +4,14 @@ import type { DbConnectionConfig } from '@shared/types';
 import { api } from '@renderer/services/api';
 import { Button, Input } from '@renderer/ui/components';
 
-const initialState: DbConnectionConfig = { host: '127.0.0.1', port: 3306, user: 'root', password: '', database: 'lavanderia_negocio', ssl: false };
+const initialState: DbConnectionConfig = {
+  host: '127.0.0.1',
+  port: 3306,
+  user: 'lavanderia',
+  password: 'lavanderia_dev',
+  database: 'lavanderia',
+  ssl: false
+};
 
 export const SetupPage = () => {
   const [form, setForm] = useState(initialState);

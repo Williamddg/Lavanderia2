@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, shell } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import { databaseManager } from '../services/database-manager.js';
 import { createClientsService } from '../../backend/modules/clients/service.js';
 import { createOrdersService } from '../../backend/modules/orders/service.js';
@@ -22,9 +22,28 @@ import type {
   DeliveryInput,
   ExternalLinkPayload,
   LoginInput,
+  CompanySettingsInput,
   OrderInput,
+  OrderProtectionPasswordInput,
   PaymentInput
 } from '../../shared/types.js';
+
+const validateExternalUrl = (url: string) => {
+  const parsed = new URL(url);
+
+  if (parsed.protocol === 'https:') {
+    return parsed.toString();
+  }
+
+  if (
+    parsed.protocol === 'http:' &&
+    (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost')
+  ) {
+    return parsed.toString();
+  }
+
+  throw new Error('Solo se permiten enlaces https o localhost.');
+};
 
 const wrap =
   <TArgs extends unknown[], TResult>(handler: (...args: TArgs) => Promise<TResult>) =>
@@ -74,25 +93,14 @@ export const registerIpc = () => {
 
   ipcMain.handle(
     'settings:update-company',
-    wrap(async (input) =>
+    wrap(async (input: CompanySettingsInput) =>
       createSettingsService(await databaseManager.getDb()).updateCompanySettings(input)
     )
   );
 
   ipcMain.handle(
-    'settings:get-order-protection-password',
-    wrap(async () =>
-      createSettingsService(await databaseManager.getDb()).getOrderProtectionPassword()
-    )
-  );
-
-  ipcMain.handle(
   'settings:update-order-protection-password',
-  wrap(async (input: {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-  }) =>
+  wrap(async (input: OrderProtectionPasswordInput) =>
     createSettingsService(await databaseManager.getDb()).updateOrderProtectionPassword(input)
   )
 );
@@ -161,7 +169,7 @@ export const registerIpc = () => {
   ipcMain.handle(
     'app:open-external',
     wrap(async ({ url }: ExternalLinkPayload) => {
-      await shell.openExternal(url);
+      await shell.openExternal(validateExternalUrl(url));
       return { opened: true };
     })
   );

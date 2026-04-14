@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lavanderia-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: lavanderia
+      MYSQL_USER: lavanderia
+      MYSQL_PASSWORD: lavanderia_dev
+      MYSQL_ROOT_PASSWORD: root_dev_only
+      TZ: America/Bogota
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:

@@ -13,7 +13,20 @@ const schema = z.object({
   ticketCode: z.string().nullable().optional()
 });
 
-const mapDelivery = (row: any): DeliveryRecord => ({
+type DeliveryRow = {
+  id: number;
+  order_id: number;
+  delivered_to: string;
+  receiver_document: string | null;
+  receiver_phone: string | null;
+  relationship_to_client: string | null;
+  receiver_signature: string | null;
+  outstanding_balance: string | number;
+  ticket_code: string;
+  created_at: Date;
+};
+
+const mapDelivery = (row: DeliveryRow): DeliveryRecord => ({
   id: row.id,
   orderId: row.order_id,
   deliveredTo: row.delivered_to,

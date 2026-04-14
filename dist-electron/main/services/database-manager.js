@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.databaseManager = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
+const electron_store_1 = __importDefault(require("electron-store"));
 const connection_js_1 = require("../../backend/db/connection.js");
 const migrator_js_1 = require("../../backend/db/migrator.js");
-const ElectronStore = require('electron-store').default;
-const store = new ElectronStore({
+const store = new electron_store_1.default({
     name: 'lavanderia-settings'
 });
 class DatabaseManager {

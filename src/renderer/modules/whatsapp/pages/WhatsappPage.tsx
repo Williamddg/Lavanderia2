@@ -155,7 +155,7 @@ Te esperamos.${policies}`;
       default:
         return '';
     }
-  }, [template, customMessage, selectedOrder, selectedClient, companyName]);
+  }, [template, customMessage, selectedOrder, selectedClient, companyName, company?.invoicePolicies]);
 
   useEffect(() => {
     setManualMessage(generatedMessage);

@@ -18,6 +18,17 @@ const service_js_11 = require("../../backend/modules/reports/service.js");
 const printer_service_js_1 = require("../services/printer-service.js");
 const backup_service_js_1 = require("../services/backup-service.js");
 const license_service_js_1 = require("../services/license-service.js");
+const validateExternalUrl = (url) => {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:') {
+        return parsed.toString();
+    }
+    if (parsed.protocol === 'http:' &&
+        (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost')) {
+        return parsed.toString();
+    }
+    throw new Error('Solo se permiten enlaces https o localhost.');
+};
 const wrap = (handler) => async (_event, ...args) => {
     try {
         const data = await handler(...args);
@@ -43,7 +54,6 @@ const registerIpc = () => {
     electron_1.ipcMain.handle('backup:upload-drive', wrap(async () => backup_service_js_1.backupService.uploadBackupToDrive()));
     electron_1.ipcMain.handle('backup:list', wrap(async () => backup_service_js_1.backupService.listBackups()));
     electron_1.ipcMain.handle('settings:update-company', wrap(async (input) => (0, service_js_3.createSettingsService)(await database_manager_js_1.databaseManager.getDb()).updateCompanySettings(input)));
-    electron_1.ipcMain.handle('settings:get-order-protection-password', wrap(async () => (0, service_js_3.createSettingsService)(await database_manager_js_1.databaseManager.getDb()).getOrderProtectionPassword()));
     electron_1.ipcMain.handle('settings:update-order-protection-password', wrap(async (input) => (0, service_js_3.createSettingsService)(await database_manager_js_1.databaseManager.getDb()).updateOrderProtectionPassword(input)));
     electron_1.ipcMain.handle('reports:summary', wrap(async (from, to) => (0, service_js_11.createReportsService)(await database_manager_js_1.databaseManager.getDb()).summary(from, to)));
     electron_1.ipcMain.handle('printers:list', wrap(async () => printer_service_js_1.printerService.listPrinters()));
@@ -58,7 +68,7 @@ const registerIpc = () => {
     electron_1.ipcMain.handle('services:delete', wrap(async (id) => services_manager_js_1.servicesManager.remove(id)));
     electron_1.ipcMain.handle('app:health', wrap(async () => database_manager_js_1.databaseManager.healthCheck()));
     electron_1.ipcMain.handle('app:open-external', wrap(async ({ url }) => {
-        await electron_1.shell.openExternal(url);
+        await electron_1.shell.openExternal(validateExternalUrl(url));
         return { opened: true };
     }));
     electron_1.ipcMain.handle('db:save-config', wrap(async (config) => {

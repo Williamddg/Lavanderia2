@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { CatalogsPayload, PaymentInput } from '@shared/types';
 import { Button, Input, Select } from '@renderer/ui/components';

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+import type { Order } from '@shared/types';
 import { api } from '@renderer/services/api';
 import { DataTable, Input, PageHeader, StatusChip } from '@renderer/ui/components';
 import { currency, dateTime } from '@renderer/utils/format';
@@ -104,10 +105,10 @@ export const OrdersPage = () => {
       const selectedOrder = orders.find((order) => order.id === orderId);
 
       if (selectedStatus) {
-        queryClient.setQueryData(['orders'], (old: any) => {
+        queryClient.setQueryData<Order[]>(['orders'], (old) => {
           if (!Array.isArray(old)) return old;
 
-          return old.map((order: any) =>
+          return old.map((order) =>
             order.id === orderId
               ? {
                   ...order,
