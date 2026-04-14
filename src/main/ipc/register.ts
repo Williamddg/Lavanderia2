@@ -22,10 +22,13 @@ import type {
   DeliveryInput,
   ExternalLinkPayload,
   LoginInput,
+  LocalInstallInput,
   CompanySettingsInput,
   OrderInput,
+  InitialUsersSetupInput,
   OrderProtectionPasswordInput,
-  PaymentInput
+  PaymentInput,
+  UserAccessVerificationInput
 } from '../../shared/types.js';
 
 const validateExternalUrl = (url: string) => {
@@ -184,9 +187,33 @@ export const registerIpc = () => {
   );
 
   ipcMain.handle(
+    'db:bootstrap-local',
+    wrap(async (input: LocalInstallInput) => databaseManager.bootstrapLocalInstall(input))
+  );
+
+  ipcMain.handle(
     'auth:verify-password',
     wrap(async (password: string) =>
       createAuthService(await databaseManager.getDb()).verifyPassword(password)
+    )
+  );
+
+  ipcMain.handle(
+    'auth:verify-user-access',
+    wrap(async (input: UserAccessVerificationInput) =>
+      createAuthService(await databaseManager.getDb()).verifyUserAccess(input)
+    )
+  );
+
+  ipcMain.handle(
+    'auth:bootstrap-roles',
+    wrap(async () => createAuthService(await databaseManager.getDb()).listBootstrapRoles())
+  );
+
+  ipcMain.handle(
+    'auth:bootstrap-users',
+    wrap(async (input: InitialUsersSetupInput) =>
+      createAuthService(await databaseManager.getDb()).bootstrapUsers(input)
     )
   );
 

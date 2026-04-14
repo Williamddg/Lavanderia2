@@ -13,6 +13,10 @@ const CASH_DRAWER_PULSE = Buffer.from([ESC, 0x70, 0x00, 0x19, 0xfa]);
 
 class PrinterService {
   async listPrinters(): Promise<PrinterInfo[]> {
+    if (!this.isHardwareSupported()) {
+      return [];
+    }
+
     const win = BrowserWindow.getAllWindows()[0];
 
     if (!win) {
@@ -29,6 +33,12 @@ class PrinterService {
   }
 
   async openDrawer(printerName?: string) {
+    if (!this.isHardwareSupported()) {
+      throw new Error(
+        'Esta acción requiere hardware local compatible y por ahora solo está disponible en Windows.'
+      );
+    }
+
     const printerModule = await this.loadPrinterModule();
     const printers = await this.listPrinters();
 
@@ -70,6 +80,10 @@ class PrinterService {
         }`.trim()
       );
     }
+  }
+
+  private isHardwareSupported() {
+    return process.platform === 'win32';
   }
 }
 

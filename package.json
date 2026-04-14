@@ -3,6 +3,7 @@
   "version": "1.0.5",
   "private": true,
   "type": "commonjs",
+  "author": "Sistetecni",
   "description": "Aplicación de escritorio para gestión de lavandería y sastrería",
   "engines": {
     "node": ">=22 <25"
@@ -18,16 +19,17 @@
     "dev:app": "node node_modules/wait-on/bin/wait-on http-get://localhost:5173 dist-electron/main/main.js && node node_modules/electron/cli.js .",
     "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:app\"",
     "dev:debug": "ELECTRON_OPEN_DEVTOOLS=1 node node_modules/concurrently/dist/bin/concurrently.js \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:app\"",
-    "build": "node node_modules/vite/bin/vite.js build && node node_modules/typescript/bin/tsc -p tsconfig.electron.json",
+    "build": "node node_modules/vite/bin/vite.js build && node node_modules/typescript/bin/tsc -p tsconfig.electron.json && node scripts/copy-migrations.js",
     "dist": "npm run build && node node_modules/electron-builder/cli.js",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json && node node_modules/typescript/bin/tsc --noEmit -p tsconfig.electron.json",
     "lint": "node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx",
     "start": "node node_modules/electron/cli.js .",
-    "postinstall": "node node_modules/electron-rebuild/lib/src/cli.js"
+    "postinstall": "node node_modules/electron/install.js"
   },
   "build": {
     "appId": "com.sistetecni.lavanderia",
     "productName": "Lavanderia y Sastreria Sistetecni",
+    "npmRebuild": false,
     "directories": {
       "output": "release"
     },
@@ -104,7 +106,6 @@
     "concurrently": "^9.1.2",
     "electron": "^35.7.5",
     "electron-builder": "^26.8.1",
-    "electron-rebuild": "^3.2.9",
     "eslint": "^9.24.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CompanySettings, OrderProtectionPasswordInput } from '@shared/types';
+import type {
+  CompanySettings,
+  OrderProtectionPasswordInput,
+  SessionUser
+} from '@shared/types';
 import { api } from '@renderer/services/api';
 import { Button, DataTable, Input, PageHeader } from '@renderer/ui/components';
 
-export const SettingsPage = () => {
+type Props = {
+  user: SessionUser;
+};
+
+export const SettingsPage = ({ user }: Props) => {
   const queryClient = useQueryClient();
 
   const { data, refetch } = useQuery({
@@ -21,6 +29,8 @@ export const SettingsPage = () => {
   const [currentAdminPassword, setCurrentAdminPassword] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [accessPassword, setAccessPassword] = useState('');
+  const [accessGranted, setAccessGranted] = useState(false);
 
   useEffect(() => {
     if (data) setForm(data);
@@ -46,6 +56,18 @@ export const SettingsPage = () => {
       setCurrentAdminPassword('');
       setNewAdminPassword('');
       setConfirmAdminPassword('');
+    }
+  });
+
+  const verifyAccessMutation = useMutation({
+    mutationFn: (password: string) =>
+      api.verifyUserAccess({
+        username: user.username,
+        password
+      }),
+    onSuccess: () => {
+      setAccessGranted(true);
+      setAccessPassword('');
     }
   });
 
@@ -76,6 +98,50 @@ export const SettingsPage = () => {
 
     reader.readAsDataURL(file);
   };
+
+  if (!accessGranted) {
+    return (
+      <section className="stack-gap">
+        <PageHeader
+          title="Configuración"
+          subtitle="Confirma tu contraseña para acceder a este módulo."
+        />
+
+        <div className="card-panel stack-gap" style={{ maxWidth: 520 }}>
+          <label>
+            <span>Usuario actual</span>
+            <Input value={user.username} disabled />
+          </label>
+
+          <label>
+            <span>Contraseña del usuario</span>
+            <Input
+              type="password"
+              value={accessPassword}
+              onChange={(e) => setAccessPassword(e.target.value)}
+              placeholder="Ingresa tu contraseña para continuar"
+              autoComplete="current-password"
+            />
+          </label>
+
+          <div className="form-actions">
+            <Button
+              onClick={() => verifyAccessMutation.mutate(accessPassword)}
+              disabled={verifyAccessMutation.isPending || !accessPassword.trim()}
+            >
+              {verifyAccessMutation.isPending ? 'Validando...' : 'Entrar a configuración'}
+            </Button>
+          </div>
+
+          {verifyAccessMutation.isError && (
+            <p className="error-text">
+              {(verifyAccessMutation.error as Error).message}
+            </p>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="stack-gap">

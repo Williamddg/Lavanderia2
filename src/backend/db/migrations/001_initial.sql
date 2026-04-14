@@ -349,8 +349,10 @@ INSERT INTO counters (counter_key, prefix, current_value, padding)
 SELECT 'invoices', 'FAC', 0, 6 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM counters WHERE counter_key = 'invoices');
 INSERT INTO roles (name, description)
 SELECT 'Administrador', 'Acceso total al sistema' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'Administrador');
-INSERT INTO users (role_id, username, password_hash, full_name, is_active)
-SELECT 1, 'admin', 'admin', 'Administrador General', 1 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
+INSERT INTO roles (name, description)
+SELECT 'Supervisor', 'Gestión operativa y validación de procesos' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'Supervisor');
+INSERT INTO roles (name, description)
+SELECT 'Operador', 'Operación diaria de recepción, pagos y entregas' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'Operador');
 INSERT INTO order_statuses (code, name, color, is_final)
 SELECT 'CREATED', 'Creada', 'slate', 0 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM order_statuses WHERE code = 'CREATED');
 INSERT INTO order_statuses (code, name, color, is_final)

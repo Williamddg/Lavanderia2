@@ -76,7 +76,11 @@ const registerIpc = () => {
         await database_manager_js_1.databaseManager.migrate();
         return database_manager_js_1.databaseManager.healthCheck();
     }));
+    electron_1.ipcMain.handle('db:bootstrap-local', wrap(async (input) => database_manager_js_1.databaseManager.bootstrapLocalInstall(input)));
     electron_1.ipcMain.handle('auth:verify-password', wrap(async (password) => (0, service_js_4.createAuthService)(await database_manager_js_1.databaseManager.getDb()).verifyPassword(password)));
+    electron_1.ipcMain.handle('auth:verify-user-access', wrap(async (input) => (0, service_js_4.createAuthService)(await database_manager_js_1.databaseManager.getDb()).verifyUserAccess(input)));
+    electron_1.ipcMain.handle('auth:bootstrap-roles', wrap(async () => (0, service_js_4.createAuthService)(await database_manager_js_1.databaseManager.getDb()).listBootstrapRoles()));
+    electron_1.ipcMain.handle('auth:bootstrap-users', wrap(async (input) => (0, service_js_4.createAuthService)(await database_manager_js_1.databaseManager.getDb()).bootstrapUsers(input)));
     electron_1.ipcMain.handle('auth:login', wrap(async (input) => (0, service_js_4.createAuthService)(await database_manager_js_1.databaseManager.getDb()).login(input)));
     electron_1.ipcMain.handle('settings:company', wrap(async () => (0, service_js_3.createSettingsService)(await database_manager_js_1.databaseManager.getDb()).getCompanySettings()));
     electron_1.ipcMain.handle('clients:list', wrap(async () => (0, service_js_1.createClientsService)(await database_manager_js_1.databaseManager.getDb()).list()));

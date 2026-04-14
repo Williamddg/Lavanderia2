@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import type { HealthStatus, SessionUser } from '@shared/types';
 import { api } from './services/api';
 import { AppShell } from './ui/layouts/AppShell';
 import { SetupPage } from './modules/shared/components/SetupPage';
 import { PlaceholderPage } from './modules/shared/components/PlaceholderPage';
 import { LoginPage } from './modules/auth/pages/LoginPage';
+import { InitialUsersSetupPage } from './modules/auth/pages/InitialUsersSetupPage';
 import { DashboardPage } from './modules/dashboard/pages/DashboardPage';
 import { ClientsPage } from './modules/clients/pages/ClientsPage';
 import { NewOrderPage } from './modules/orders/pages/NewOrderPage';
@@ -26,6 +27,7 @@ import { LicensePage } from './modules/license/pages/LicensePage';
 import { LicenseRenewalBanner } from './modules/license/components/LicenseRenewalBanner';
 
 export default function App() {
+  const navigate = useNavigate();
   const [licenseReady, setLicenseReady] = useState(false);
   const [licenseValid, setLicenseValid] = useState(false);
   const [licenseWarning, setLicenseWarning] = useState(false);
@@ -35,6 +37,16 @@ export default function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleLogin = (nextUser: SessionUser) => {
+    setUser(nextUser);
+    navigate('/', { replace: true });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    navigate('/', { replace: true });
+  };
 
   useEffect(() => {
     api.health().then(setHealth).finally(() => setLoading(false));
@@ -78,11 +90,21 @@ export default function App() {
   }
 
   if (!health?.configured || !health.connected) {
-    return <SetupPage />;
+    return <SetupPage onCompleted={setHealth} />;
+  }
+
+  if (!health.hasUsers) {
+    return (
+      <InitialUsersSetupPage
+        onCompleted={() =>
+          api.health().then(setHealth)
+        }
+      />
+    );
   }
 
   if (!user) {
-    return <LoginPage onLogin={setUser} />;
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   return (
@@ -95,7 +117,7 @@ export default function App() {
       )}
 
       <Routes>
-        <Route element={<AppShell user={user} onLogout={() => setUser(null)} />}>
+        <Route element={<AppShell user={user} onLogout={handleLogout} />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/clientes" element={<ClientsPage />} />
           <Route path="/ordenes" element={<OrdersPage />} />
@@ -111,7 +133,7 @@ export default function App() {
           <Route path="/inventario" element={<InventoryPage />} />
           <Route path="/reportes" element={<ReportsPage />} />
           <Route path="/whatsapp" element={<WhatsappPage />} />
-          <Route path="/configuracion" element={<SettingsPage />} />
+          <Route path="/configuracion" element={<SettingsPage user={user} />} />
           <Route
             path="/auditoria"
             element={

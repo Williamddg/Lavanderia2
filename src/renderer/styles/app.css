@@ -10,8 +10,13 @@
 
 html,
 body {
+  height: 100%;
   margin: 0;
   background: #eef2f5;
+}
+
+#root {
+  min-height: 100%;
 }
 
 a {
@@ -29,16 +34,20 @@ textarea {
 .app-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
   background: linear-gradient(180deg, #1f2c38 0%, #243443 100%);
   color: white;
+  width: 280px;
+  min-width: 280px;
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  overflow: hidden;
 }
 
 .brand-panel {
@@ -53,6 +62,10 @@ textarea {
   display: grid;
   gap: 8px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
 }
 
 .nav-link {
@@ -69,13 +82,17 @@ textarea {
 .sidebar-footer {
   display: grid;
   gap: 8px;
+  margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .content-shell {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topbar {
@@ -99,6 +116,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .topbar-user {
@@ -107,10 +125,24 @@ textarea {
   padding: 12px 16px;
   box-shadow: 0 6px 24px rgba(31, 44, 56, 0.08);
   display: grid;
+  justify-items: end;
+  min-width: 220px;
+}
+
+.topbar-user span {
+  font-variant-numeric: tabular-nums;
+  color: #4b5a69;
+}
+
+.topbar-user small {
+  color: #627182;
 }
 
 .page-content {
   padding: 24px 32px 32px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .stack-gap {
@@ -154,8 +186,16 @@ textarea {
 .center-page {
   min-height: 100vh;
   display: grid;
-  place-items: center;
   padding: 24px;
+}
+
+.auth-screen {
+  place-items: start center;
+  overflow-y: auto;
+}
+
+.center-page {
+  place-items: center;
 }
 
 .auth-card,

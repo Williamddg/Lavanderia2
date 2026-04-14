@@ -13,6 +13,9 @@ import type {
   DeliveryInput,
   DeliveryRecord,
   HealthStatus,
+  BootstrapRole,
+  InitialUsersSetupInput,
+  InitialUsersSetupResult,
   Invoice,
   InvoiceDetail,
   LoginInput,
@@ -24,6 +27,7 @@ import type {
   Service,
   ServiceInput,
   SessionUser,
+  UserAccessVerificationInput,
   WarrantyInput,
   WarrantyRecord,
   WarrantyStatus,
@@ -37,6 +41,8 @@ import type {
   CashOpenInput,
   CompanySettingsInput,
   LicenseStatus,
+  LocalInstallInput,
+  LocalInstallResult,
   OrderProtectionPasswordInput
 } from '@shared/types';
 
@@ -91,11 +97,18 @@ export const api = {
   health: () => unwrap<HealthStatus>(window.desktopApi.health()),
   openExternal: (url: string) => unwrap(window.desktopApi.openExternal({ url })),
   saveDbConfig: (config: DbConnectionConfig) => unwrap<HealthStatus>(window.desktopApi.saveDbConfig(config)),
+  bootstrapLocalInstall: (input: LocalInstallInput) =>
+    unwrap<LocalInstallResult>(window.desktopApi.bootstrapLocalInstall(input)),
+  listBootstrapRoles: () => unwrap<BootstrapRole[]>(window.desktopApi.listBootstrapRoles()),
+  bootstrapUsers: (input: InitialUsersSetupInput) =>
+    unwrap<InitialUsersSetupResult>(window.desktopApi.bootstrapUsers(input)),
   login: (input: LoginInput) => unwrap<SessionUser>(window.desktopApi.login(input)),
   companySettings: () => unwrap<CompanySettings | null>(window.desktopApi.getCompanySettings()),
 
   verifyPassword: (password: string) =>
     unwrap<{ valid: boolean }>(window.desktopApi.verifyPassword(password)),
+  verifyUserAccess: (input: UserAccessVerificationInput) =>
+    unwrap<{ valid: true }>(window.desktopApi.verifyUserAccess(input)),
 
   listClients: () => unwrap<Client[]>(window.desktopApi.listClients()),
   createClient: (input: ClientInput) => unwrap<Client>(window.desktopApi.createClient(input)),

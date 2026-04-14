@@ -3,6 +3,7 @@ directories:
   buildResources: build
 appId: com.sistetecni.lavanderia
 productName: Lavanderia y Sastreria Sistetecni
+npmRebuild: false
 files:
   - filter:
       - dist/**

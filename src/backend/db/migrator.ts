@@ -1,9 +1,23 @@
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from './schema.js';
 
-const migrationsDir = path.join(__dirname, 'migrations');
+const resolveMigrationsDir = () => {
+  const candidates = [
+    path.join(process.cwd(), 'src', 'backend', 'db', 'migrations'),
+    path.join(__dirname, 'migrations')
+  ];
+
+  const found = candidates.find((candidate) => fsSync.existsSync(candidate));
+
+  if (!found) {
+    throw new Error('No se encontró el directorio de migraciones SQL.');
+  }
+
+  return found;
+};
 
 export const runMigrations = async (db: Kysely<Database>) => {
   await sql`
@@ -14,6 +28,7 @@ export const runMigrations = async (db: Kysely<Database>) => {
     )
   `.execute(db);
 
+  const migrationsDir = resolveMigrationsDir();
   const applied = await db.selectFrom('schema_migrations').select('name').execute();
   const appliedSet = new Set(applied.map((item) => item.name));
   const files = (await fs.readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();

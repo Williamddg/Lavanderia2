@@ -7,11 +7,58 @@ export type DbConnectionConfig = {
   ssl?: boolean;
 };
 
+export type LocalInstallInput = {
+  host: string;
+  port: number;
+  adminUser: string;
+  adminPassword: string;
+  database: string;
+  appDbUser: string;
+  appDbPassword: string;
+  ssl?: boolean;
+};
+
+export type InstallStepStatus = 'pending' | 'success' | 'error';
+
+export type InstallStep = {
+  key: string;
+  label: string;
+  status: InstallStepStatus;
+};
+
+export type LocalInstallResult = {
+  steps: InstallStep[];
+  health: HealthStatus;
+  dbConfig: DbConnectionConfig;
+};
+
 export type HealthStatus = {
   configured: boolean;
   connected: boolean;
   migrated: boolean;
+  hasUsers: boolean;
   message: string;
+};
+
+export type BootstrapRole = {
+  id: number;
+  name: string;
+  description: string | null;
+};
+
+export type InitialUserInput = {
+  fullName: string;
+  username: string;
+  password: string;
+  roleId: number;
+};
+
+export type InitialUsersSetupInput = {
+  users: InitialUserInput[];
+};
+
+export type InitialUsersSetupResult = {
+  createdUsers: number;
 };
 
 export type ApiResponse<T> = {
@@ -32,6 +79,11 @@ export type LoginInput = {
   username: string;
   password: string;
   rememberMe?: boolean;
+};
+
+export type UserAccessVerificationInput = {
+  username: string;
+  password: string;
 };
 
 export type CompanySettingsInput = {

@@ -5,9 +5,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runMigrations = void 0;
 const promises_1 = __importDefault(require("node:fs/promises"));
+const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const kysely_1 = require("kysely");
-const migrationsDir = node_path_1.default.join(__dirname, 'migrations');
+const resolveMigrationsDir = () => {
+    const candidates = [
+        node_path_1.default.join(process.cwd(), 'src', 'backend', 'db', 'migrations'),
+        node_path_1.default.join(__dirname, 'migrations')
+    ];
+    const found = candidates.find((candidate) => node_fs_1.default.existsSync(candidate));
+    if (!found) {
+        throw new Error('No se encontró el directorio de migraciones SQL.');
+    }
+    return found;
+};
 const runMigrations = async (db) => {
     await (0, kysely_1.sql) `
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -16,6 +27,7 @@ const runMigrations = async (db) => {
       executed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `.execute(db);
+    const migrationsDir = resolveMigrationsDir();
     const applied = await db.selectFrom('schema_migrations').select('name').execute();
     const appliedSet = new Set(applied.map((item) => item.name));
     const files = (await promises_1.default.readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();

@@ -5,16 +5,24 @@ import type {
   DbConnectionConfig,
   DeliveryInput,
   ExternalLinkPayload,
+  InitialUsersSetupInput,
+  LocalInstallInput,
   OrderProtectionPasswordInput,
   LoginInput,
   OrderInput,
   PaymentInput,
-  ServiceInput
+  ServiceInput,
+  UserAccessVerificationInput
 } from '../shared/types.js';
 
 contextBridge.exposeInMainWorld('desktopApi', {
   verifyPassword: (password: string) =>
     ipcRenderer.invoke('auth:verify-password', password),
+  verifyUserAccess: (input: UserAccessVerificationInput) =>
+    ipcRenderer.invoke('auth:verify-user-access', input),
+  listBootstrapRoles: () => ipcRenderer.invoke('auth:bootstrap-roles'),
+  bootstrapUsers: (input: InitialUsersSetupInput) =>
+    ipcRenderer.invoke('auth:bootstrap-users', input),
 
   updateOrderProtectionPassword: (input: OrderProtectionPasswordInput) =>
   ipcRenderer.invoke('settings:update-order-protection-password', input),
@@ -44,6 +52,7 @@ contextBridge.exposeInMainWorld('desktopApi', {
   health: () => ipcRenderer.invoke('app:health'),
   openExternal: (payload: ExternalLinkPayload) => ipcRenderer.invoke('app:open-external', payload),
   saveDbConfig: (config: DbConnectionConfig) => ipcRenderer.invoke('db:save-config', config),
+  bootstrapLocalInstall: (input: LocalInstallInput) => ipcRenderer.invoke('db:bootstrap-local', input),
   login: (input: LoginInput) => ipcRenderer.invoke('auth:login', input),
   getCompanySettings: () => ipcRenderer.invoke('settings:company'),
 

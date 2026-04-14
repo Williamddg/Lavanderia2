@@ -40,6 +40,9 @@ const ESC = 0x1b;
 const CASH_DRAWER_PULSE = Buffer.from([ESC, 0x70, 0x00, 0x19, 0xfa]);
 class PrinterService {
     async listPrinters() {
+        if (!this.isHardwareSupported()) {
+            return [];
+        }
         const win = electron_1.BrowserWindow.getAllWindows()[0];
         if (!win) {
             throw new Error('No hay ventana activa para consultar impresoras.');
@@ -52,6 +55,9 @@ class PrinterService {
         }));
     }
     async openDrawer(printerName) {
+        if (!this.isHardwareSupported()) {
+            throw new Error('Esta acción requiere hardware local compatible y por ahora solo está disponible en Windows.');
+        }
         const printerModule = await this.loadPrinterModule();
         const printers = await this.listPrinters();
         const selected = printerName?.trim()
@@ -83,6 +89,9 @@ class PrinterService {
         catch (error) {
             throw new Error(`La integración nativa de impresión no está disponible en esta instalación. Rebuild requerido para ${process.platform}/${process.arch}. ${error instanceof Error ? error.message : ''}`.trim());
         }
+    }
+    isHardwareSupported() {
+        return process.platform === 'win32';
     }
 }
 exports.printerService = new PrinterService();

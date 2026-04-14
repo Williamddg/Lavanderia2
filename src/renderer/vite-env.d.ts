@@ -8,7 +8,12 @@ import type {
   DbConnectionConfig,
   DeliveryInput,
   ExternalLinkPayload,
+  BootstrapRole,
   HealthStatus,
+  InitialUsersSetupInput,
+  InitialUsersSetupResult,
+  LocalInstallInput,
+  LocalInstallResult,
   Invoice,
   InvoiceDetail,
   LicenseStatus,
@@ -23,13 +28,21 @@ import type {
   ReportsSummary,
   Service,
   ServiceInput,
-  SessionUser
+  SessionUser,
+  UserAccessVerificationInput
 } from '@shared/types';
 
 declare global {
   interface Window {
     desktopApi: {
       verifyPassword: (password: string) => Promise<ApiResponse<{ valid: boolean }>>;
+      verifyUserAccess: (
+        input: UserAccessVerificationInput
+      ) => Promise<ApiResponse<{ valid: true }>>;
+      listBootstrapRoles: () => Promise<ApiResponse<BootstrapRole[]>>;
+      bootstrapUsers: (
+        input: InitialUsersSetupInput
+      ) => Promise<ApiResponse<InitialUsersSetupResult>>;
       updateOrderProtectionPassword: (
         input: OrderProtectionPasswordInput
       ) => Promise<ApiResponse<{ success: true }>>;
@@ -78,6 +91,7 @@ declare global {
       health: () => Promise<ApiResponse<HealthStatus>>;
       openExternal: (payload: ExternalLinkPayload) => Promise<ApiResponse<{ opened: true }>>;
       saveDbConfig: (config: DbConnectionConfig) => Promise<ApiResponse<HealthStatus>>;
+      bootstrapLocalInstall: (input: LocalInstallInput) => Promise<ApiResponse<LocalInstallResult>>;
       login: (input: LoginInput) => Promise<ApiResponse<SessionUser>>;
       getCompanySettings: () => Promise<ApiResponse<CompanySettings | null>>;
 

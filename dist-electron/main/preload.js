@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 electron_1.contextBridge.exposeInMainWorld('desktopApi', {
     verifyPassword: (password) => electron_1.ipcRenderer.invoke('auth:verify-password', password),
+    verifyUserAccess: (input) => electron_1.ipcRenderer.invoke('auth:verify-user-access', input),
+    listBootstrapRoles: () => electron_1.ipcRenderer.invoke('auth:bootstrap-roles'),
+    bootstrapUsers: (input) => electron_1.ipcRenderer.invoke('auth:bootstrap-users', input),
     updateOrderProtectionPassword: (input) => electron_1.ipcRenderer.invoke('settings:update-order-protection-password', input),
     getLicenseStatus: () => electron_1.ipcRenderer.invoke('license:status'),
     activateLicense: (licenseKey) => electron_1.ipcRenderer.invoke('license:activate', licenseKey),
@@ -20,6 +23,7 @@ electron_1.contextBridge.exposeInMainWorld('desktopApi', {
     health: () => electron_1.ipcRenderer.invoke('app:health'),
     openExternal: (payload) => electron_1.ipcRenderer.invoke('app:open-external', payload),
     saveDbConfig: (config) => electron_1.ipcRenderer.invoke('db:save-config', config),
+    bootstrapLocalInstall: (input) => electron_1.ipcRenderer.invoke('db:bootstrap-local', input),
     login: (input) => electron_1.ipcRenderer.invoke('auth:login', input),
     getCompanySettings: () => electron_1.ipcRenderer.invoke('settings:company'),
     listClients: () => electron_1.ipcRenderer.invoke('clients:list'),
