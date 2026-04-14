@@ -29,6 +29,16 @@ Windows:
             Ooperador123.
 
 
+estaria bueno guardar los datos de quien abre caja anteriormente par seleccioanrlo y que se llenara, y no tener que llenarlo todos los dias
+
+
+error al abrir caja
+Unknown column 'opened_by_name' in 'field list'
+
+
+
+
+
 
 
 

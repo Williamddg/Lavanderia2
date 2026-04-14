@@ -12,6 +12,8 @@ import {
 import { currency, dateTime } from '@renderer/utils/format';
 
 const ADMIN_WHATSAPP_STORAGE_KEY = 'cash_close_admin_whatsapp';
+const CASH_OPENED_BY_NAME_STORAGE_KEY = 'cash_opened_by_name';
+const CASH_OPENED_BY_PHONE_STORAGE_KEY = 'cash_opened_by_phone';
 
 const normalizePhone = (raw?: string | null) => {
   const digits = String(raw ?? '').replace(/\D/g, '');
@@ -376,8 +378,12 @@ export const CashPage = () => {
   const [adminWhatsapp, setAdminWhatsapp] = useState(() => {
     return localStorage.getItem(ADMIN_WHATSAPP_STORAGE_KEY) ?? '';
   });
-  const [openedByName, setOpenedByName] = useState('');
-  const [openedByPhone, setOpenedByPhone] = useState('');
+  const [openedByName, setOpenedByName] = useState(() => {
+    return localStorage.getItem(CASH_OPENED_BY_NAME_STORAGE_KEY) ?? '';
+  });
+  const [openedByPhone, setOpenedByPhone] = useState(() => {
+    return localStorage.getItem(CASH_OPENED_BY_PHONE_STORAGE_KEY) ?? '';
+  });
   const [openCashError, setOpenCashError] = useState<string | null>(null);
   const [lastClosedPreview, setLastClosedPreview] = useState<CashCloseResult | null>(null);
 
@@ -392,10 +398,22 @@ export const CashPage = () => {
   }, [adminWhatsapp]);
 
   useEffect(() => {
+    localStorage.setItem(CASH_OPENED_BY_NAME_STORAGE_KEY, openedByName);
+  }, [openedByName]);
+
+  useEffect(() => {
+    localStorage.setItem(CASH_OPENED_BY_PHONE_STORAGE_KEY, openedByPhone);
+  }, [openedByPhone]);
+
+  useEffect(() => {
     if (data?.activeSession) {
       setOpenedByName(data.activeSession.openedByName ?? '');
       setOpenedByPhone(data.activeSession.openedByPhone ?? '');
+      return;
     }
+
+    setOpenedByName(localStorage.getItem(CASH_OPENED_BY_NAME_STORAGE_KEY) ?? '');
+    setOpenedByPhone(localStorage.getItem(CASH_OPENED_BY_PHONE_STORAGE_KEY) ?? '');
   }, [data?.activeSession]);
 
   const openMutation = useMutation({
