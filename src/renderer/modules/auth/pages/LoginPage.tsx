@@ -1,0 +1,135 @@
+import { useState } from 'react';
+import { api } from '@renderer/services/api';
+import type { SessionUser } from '@shared/types';
+
+type Props = {
+  onLogin: (user: SessionUser) => void;
+};
+
+export const LoginPage = ({ onLogin }: Props) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const user = await api.login({
+        username: username.trim(),
+        password,
+        rememberMe
+      });
+
+      onLogin(user);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No fue posible iniciar sesión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="auth-screen">
+      <div className="auth-backdrop" />
+
+      <div className="auth-layout">
+        <div className="auth-brand-panel">
+          <div className="auth-brand-badge">LavaSuite</div>
+
+          <h1>
+            Controla tu lavandería y sastrería
+            <span> con imagen profesional</span>
+          </h1>
+
+          <p>
+            Gestiona órdenes, entregas, pagos, garantías, caja, reportes y clientes
+            desde una sola plataforma.
+          </p>
+
+          <div className="auth-feature-list">
+            <div className="auth-feature-card">
+              <strong>Más orden</strong>
+              <span>Procesos claros desde la recepción hasta la entrega.</span>
+            </div>
+
+            <div className="auth-feature-card">
+              <strong>Más control</strong>
+              <span>Caja, gastos, licencias y operación en tiempo real.</span>
+            </div>
+
+            <div className="auth-feature-card">
+              <strong>Más confianza</strong>
+              <span>Una imagen moderna para un negocio serio y profesional.</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="auth-form-panel">
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <div className="auth-logo-circle">LS</div>
+              <div>
+                <h2>Bienvenido</h2>
+                <p>Inicia sesión para continuar</p>
+              </div>
+            </div>
+
+            <form className="auth-form" onSubmit={handleSubmit}>
+              <label>
+                <span>Usuario</span>
+                <input
+                  className="field auth-field"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Ingresa tu usuario"
+                  autoComplete="username"
+                />
+              </label>
+
+              <label>
+                <span>Contraseña</span>
+                <input
+                  className="field auth-field"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Ingresa tu contraseña"
+                  autoComplete="current-password"
+                />
+              </label>
+
+              <label className="auth-checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Recordar sesión en este equipo</span>
+              </label>
+
+              {error ? <p className="error-text auth-error">{error}</p> : null}
+
+              <button
+                type="submit"
+                className="button button-primary auth-submit"
+                disabled={loading || !username.trim() || !password.trim()}
+              >
+                {loading ? 'Ingresando...' : 'Entrar al sistema'}
+              </button>
+            </form>
+
+            <div className="auth-footer-note">
+              <span>SISTETECNI Textile suite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};

@@ -1,0 +1,29 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.sistetecni.lavanderia
+productName: Lavanderia y Sastreria Sistetecni
+files:
+  - filter:
+      - dist/**
+      - dist-electron/**
+      - package.json
+extraResources:
+  - from: resources/bin
+    to: bin
+  - from: google-oauth.json
+    to: google-oauth.json
+publish:
+  - provider: github
+    owner: santiagomontanes
+    repo: lavanderia-sastreria
+    releaseType: release
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+electronVersion: 35.7.5
