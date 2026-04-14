@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import type { OrderInput } from '@shared/types';
+import type { DeliveryInput, OrderInput } from '@shared/types';
 import { api } from '@renderer/services/api';
 import {
   Button,
@@ -16,6 +16,16 @@ import { PaymentForm } from '@renderer/modules/payments/components/PaymentForm';
 import { OrderForm } from '../components/OrderForm';
 
 const tabs = ['Resumen', 'Prendas', 'Pagos', 'Facturas', 'Entregas'] as const;
+
+const emptyDeliveryForm: DeliveryInput = {
+  orderId: 0,
+  deliveredTo: '',
+  receiverDocument: null,
+  receiverPhone: null,
+  relationshipToClient: null,
+  receiverSignature: null,
+  ticketCode: ''
+};
 
 const renderValue = (value?: string | null) => {
   const text = String(value ?? '').trim();
@@ -92,6 +102,9 @@ export const OrderDetailPage = () => {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Resumen');
   const [paymentModal, setPaymentModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
+  const [deliveryModal, setDeliveryModal] = useState(false);
+  const [deliveryForm, setDeliveryForm] = useState<DeliveryInput>(emptyDeliveryForm);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const [passwordModal, setPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
@@ -145,6 +158,20 @@ export const OrderDetailPage = () => {
           console.error('No se pudo abrir el cajón automáticamente:', error);
         }
       }
+    }
+  });
+
+  const deliveryMutation = useMutation({
+    mutationFn: api.createDelivery,
+    onSuccess: async () => {
+      setDeliveryModal(false);
+      setDeliveryForm(emptyDeliveryForm);
+      setDeliveryError(null);
+
+      await queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      await queryClient.invalidateQueries({ queryKey: ['order-detail', orderId] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     }
   });
 
@@ -240,6 +267,38 @@ export const OrderDetailPage = () => {
     }
 
     await verifyPasswordMutation.mutateAsync(password);
+  };
+
+  const canDeliverOrder =
+    !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'CANCELED'].includes(
+      String(data?.statusName ?? '').toUpperCase()
+    );
+
+  const openDeliveryModal = () => {
+    if (!data) return;
+
+    setDeliveryForm({
+      ...emptyDeliveryForm,
+      orderId: data.id,
+      deliveredTo: data.clientName ?? ''
+    });
+    setDeliveryError(null);
+    setDeliveryModal(true);
+  };
+
+  const handleSubmitDelivery = () => {
+    if (!deliveryForm.orderId) {
+      setDeliveryError('No fue posible identificar la orden a entregar.');
+      return;
+    }
+
+    if (!deliveryForm.deliveredTo.trim()) {
+      setDeliveryError('Debes ingresar el nombre de quien recibe.');
+      return;
+    }
+
+    setDeliveryError(null);
+    deliveryMutation.mutate(deliveryForm);
   };
 
   const tabContent = useMemo(() => {
@@ -484,6 +543,12 @@ export const OrderDetailPage = () => {
               Generar factura
             </Link>
 
+            {canDeliverOrder && (
+              <Button variant="secondary" onClick={openDeliveryModal}>
+                Entregar
+              </Button>
+            )}
+
             <Link className="button button-secondary" to="/ordenes">
               Volver
             </Link>
@@ -581,6 +646,111 @@ export const OrderDetailPage = () => {
               disabled={verifyPasswordMutation.isPending}
             >
               {verifyPasswordMutation.isPending ? 'Verificando...' : 'Confirmar'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deliveryModal}
+        title="Confirmar entrega"
+        onClose={() => {
+          setDeliveryModal(false);
+          setDeliveryError(null);
+        }}
+      >
+        <div className="stack-gap">
+          <label>
+            <span>Orden</span>
+            <Input value={data.orderNumber} disabled />
+          </label>
+
+          <label>
+            <span>Nombre receptor <strong>*</strong></span>
+            <Input
+              value={deliveryForm.deliveredTo}
+              onChange={(e) =>
+                setDeliveryForm((prev) => ({
+                  ...prev,
+                  deliveredTo: e.target.value
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            <span>Documento</span>
+            <Input
+              value={deliveryForm.receiverDocument ?? ''}
+              onChange={(e) =>
+                setDeliveryForm((prev) => ({
+                  ...prev,
+                  receiverDocument: e.target.value || null
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            <span>Teléfono</span>
+            <Input
+              value={deliveryForm.receiverPhone ?? ''}
+              onChange={(e) =>
+                setDeliveryForm((prev) => ({
+                  ...prev,
+                  receiverPhone: e.target.value || null
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            <span>Relación con el cliente</span>
+            <Input
+              value={deliveryForm.relationshipToClient ?? ''}
+              onChange={(e) =>
+                setDeliveryForm((prev) => ({
+                  ...prev,
+                  relationshipToClient: e.target.value || null
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            <span>Código o ticket</span>
+            <Input
+              value={deliveryForm.ticketCode}
+              onChange={(e) =>
+                setDeliveryForm((prev) => ({
+                  ...prev,
+                  ticketCode: e.target.value
+                }))
+              }
+            />
+          </label>
+
+          {deliveryError ? <p className="error-text">{deliveryError}</p> : null}
+          {deliveryMutation.isError ? (
+            <p className="error-text">{(deliveryMutation.error as Error).message}</p>
+          ) : null}
+
+          <div className="form-actions">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDeliveryModal(false);
+                setDeliveryError(null);
+              }}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              onClick={handleSubmitDelivery}
+              disabled={deliveryMutation.isPending}
+            >
+              {deliveryMutation.isPending ? 'Registrando...' : 'Confirmar entrega'}
             </Button>
           </div>
         </div>
